@@ -12,7 +12,6 @@ import json
 
 
 class Threat(Enum):
-
     def __str__(self):
         return str(self.value)
 
@@ -20,13 +19,13 @@ class Threat(Enum):
     payment_sites = 'payment-sites',
     distribution_sites = 'distribution-sites'
 
-class Malware(Enum):
 
+class Malware(Enum):
     def __str__(self):
         return str(self.value)
 
     TeslaCrypt = 'teslacrypt',
-    CryptoWall = 'cryptowall', 
+    CryptoWall = 'cryptowall',
     TorrentLocker = 'torrentlocker',
     PadCrypt = 'padcrypt',
     Locky = 'locky',
@@ -36,9 +35,11 @@ class Malware(Enum):
     DMALocker = 'dmalocker',
     Cerber = 'cerber'
 
-class RansomwareTracker(object):
 
+class RansomwareTracker(object):
     """RansomwareTracker Main Handler"""
+
+    _base_url = 'http://ransomwaretracker.abuse.ch/tracker/'
 
     def __init__(self, verbose=False):
         self.verbose = verbose
@@ -47,31 +48,31 @@ class RansomwareTracker(object):
         if self.verbose:
             print('[verbose] %s' % s)
 
-
     def extract_info_table(self, table):
         res = {}
         res['matches'] = []
         trs = table.findAll('tr')
         for tr in trs[1:]:
             tds = tr.findAll('td')
-            data = {'date_added': tds[0].text, 
-                    'threat': tds[1].text,
-                    'malware': tds[2].text,
-                    'host': tds[3].find('a').contents[0],
-                    'domain_registrar':tds[4].text,
-                    'ip_adress':tds[5].text}
+            data = {
+                'date_added': tds[0].text,
+                'threat': tds[1].text,
+                'malware': tds[2].text,
+                'host': tds[3].find('a').contents[0],
+                'domain_registrar': tds[4].text,
+                'ip_adress': tds[5].text
+            }
             res['matches'].append(data)
         res['total'] = len(res['matches'])
         return res
 
     def retrieve_results(self, page=0, filter_with=None):
-        sslbl_url = 'http://ransomwaretracker.abuse.ch/tracker/'
-
+        sslbl_url = self._base_url
         if filter_with is not None:
             sslbl_url += filter_with[0]
 
         if page != 0:
-            sslbl_url += '/page/{}'.format(page)
+            sslbl_url += 'page/{}'.format(page)
 
         req = requests.get(sslbl_url)
         soup = BeautifulSoup(req.content, 'html.parser')
@@ -80,11 +81,26 @@ class RansomwareTracker(object):
             print(
                 u"Unexpected status code from {url}: {code}".format(
                     url=sslbl_url, code=req.status_code),
-                file=sys.stderr,
-            )
+                file=sys.stderr)
             return []
 
         soup = BeautifulSoup(req.content, 'html.parser')
         table = soup.findAll('table', attrs={'class': 'maintable'})[0]
         return json.dumps(self.extract_info_table(table))
 
+    def search(self, s):
+        sslbl_url = self._base_url + '?search={}'.format(s)
+
+        req = requests.get(sslbl_url)
+        soup = BeautifulSoup(req.content, 'html.parser')
+
+        if req.status_code != 200:
+            print(
+                u"Unexpected status code from {url}: {code}".format(
+                    url=sslbl_url, code=req.status_code),
+                file=sys.stderr)
+            return []
+
+        soup = BeautifulSoup(req.content, 'html.parser')
+        table = soup.findAll('table', attrs={'class': 'maintable'})[0]
+        return json.dumps(self.extract_info_table(table))
