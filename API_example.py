@@ -13,3 +13,6 @@ print res
 
 res = RansomwareTracker(True).retrieve_results(filter_with=Threat.c2)
 print res
+
+res = RansomwareTracker(True).search('.xyz')
+print res
