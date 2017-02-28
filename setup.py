@@ -3,7 +3,7 @@ setup(
   name = 'ransomwaretracker',
   packages = ['ransomwaretracker'], # this must be the same as the name above
   version = '0.1',
-  description = 'DNS Dumpster lib',
+  description = 'Ransomware Tracker Lib',
   author = 'Paul Sec',
   author_email = 'paulwebsec@gmail.com',
   url = 'https://github.com/PaulSec/ransomware-tracker',
